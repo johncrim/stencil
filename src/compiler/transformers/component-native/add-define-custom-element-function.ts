@@ -67,7 +67,6 @@ export const addDefineCustomElementFunctions = (
       }
 
       tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...tsSourceFile.statements, ...newStatements]);
-
       return tsSourceFile;
     };
   };

@@ -2,15 +2,27 @@ import type * as d from '../../declarations';
 import type { BundleOptions } from './bundle-interface';
 import { getModule } from '../transpile/transpiled-module';
 import { isString, normalizeFsPath } from '@utils';
-import type { LoadResult, Plugin, TransformResult } from 'rollup';
+import type { LoadResult, Plugin, ResolveIdResult, TransformResult } from 'rollup';
 import { tsResolveModuleName } from '../sys/typescript/typescript-resolve-module';
 import { isAbsolute, basename } from 'path';
 import ts from 'typescript';
 
+/**
+ *
+ * @param compilerCtx
+ * @param bundleOpts
+ * @param config
+ * @returns
+ */
 export const typescriptPlugin = (compilerCtx: d.CompilerCtx, bundleOpts: BundleOptions, config: d.Config): Plugin => {
   return {
     name: `${bundleOpts.id}TypescriptPlugin`,
 
+    /**
+     *
+     * @param id
+     * @returns
+     */
     load(id: string): LoadResult {
       if (isAbsolute(id)) {
         const fsFilePath = normalizeFsPath(id);
@@ -28,6 +40,12 @@ export const typescriptPlugin = (compilerCtx: d.CompilerCtx, bundleOpts: BundleO
       }
       return null;
     },
+    /**
+     *
+     * @param _code
+     * @param id
+     * @returns
+     */
     transform(_code: string, id: string): TransformResult {
       if (isAbsolute(id)) {
         const fsFilePath = normalizeFsPath(id);
@@ -47,11 +65,23 @@ export const typescriptPlugin = (compilerCtx: d.CompilerCtx, bundleOpts: BundleO
   };
 };
 
+/**
+ *
+ * @param config
+ * @param compilerCtx
+ * @returns
+ */
 export const resolveIdWithTypeScript = (config: d.Config, compilerCtx: d.CompilerCtx): Plugin => {
   return {
     name: `resolveIdWithTypeScript`,
 
-    async resolveId(importee, importer) {
+    /**
+     *
+     * @param importee
+     * @param importer
+     * @returns
+     */
+    async resolveId(importee, importer): Promise<ResolveIdResult> {
       if (/\0/.test(importee) || !isString(importer)) {
         return null;
       }

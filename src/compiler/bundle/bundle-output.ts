@@ -40,6 +40,14 @@ export const bundleOutput = async (
   return undefined;
 };
 
+/**
+ *
+ * @param config
+ * @param compilerCtx
+ * @param buildCtx
+ * @param bundleOpts
+ * @returns
+ */
 export const getRollupOptions = (
   config: d.Config,
   compilerCtx: d.CompilerCtx,

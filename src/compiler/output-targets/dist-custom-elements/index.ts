@@ -18,6 +18,7 @@ import { optimizeModule } from '../../optimize/optimize-module';
 import { removeCollectionImports } from '../../transformers/remove-collection-imports';
 import { STENCIL_INTERNAL_CLIENT_ID, USER_INDEX_ENTRY_ID, STENCIL_APP_GLOBALS_ID } from '../../bundle/entry-alias-ids';
 import { updateStencilCoreImports } from '../../transformers/update-stencil-core-import';
+import * as ts from 'typescript';
 
 export const outputCustomElements = async (
   config: d.Config,
@@ -64,13 +65,13 @@ const bundleCustomElements = async (
         index: '\0core',
       },
       loader: {
-        '\0core': generateEntryPoint(outputTarget, buildCtx),
+        '\0core': generateEntryPoint(outputTarget),
       },
       inlineDynamicImports: outputTarget.inlineDynamicImports,
       preserveEntrySignatures: 'allow-extension',
     };
 
-    addCustomElementInputs(outputTarget, buildCtx, bundleOpts);
+    addCustomElementInputs(buildCtx, bundleOpts);
 
     const build = await bundleOutput(config, compilerCtx, buildCtx, bundleOpts);
     if (build) {
@@ -123,11 +124,12 @@ const bundleCustomElements = async (
   }
 };
 
-const addCustomElementInputs = (
-  _outputTarget: d.OutputTargetDistCustomElements,
-  buildCtx: d.BuildCtx,
-  bundleOpts: BundleOptions
-) => {
+/**
+ *
+ * @param buildCtx
+ * @param bundleOpts
+ */
+const addCustomElementInputs = (buildCtx: d.BuildCtx, bundleOpts: BundleOptions): void => {
   const components = buildCtx.components;
   components.forEach((cmp) => {
     const exp: string[] = [];
@@ -151,9 +153,13 @@ const addCustomElementInputs = (
   });
 };
 
-const generateEntryPoint = (outputTarget: d.OutputTargetDistCustomElements, _buildCtx: d.BuildCtx) => {
+/**
+ * Generate the entrypoint (`index.ts` file) contents for the `dist-custom-elements` output target
+ * @param outputTarget the output target's configuration
+ * @returns the stringified contents to be placed in the entrypoint
+ */
+const generateEntryPoint = (outputTarget: d.OutputTargetDistCustomElements): string => {
   const imp: string[] = [];
-  const exp: string[] = [];
 
   imp.push(
     `export { setAssetPath, setPlatformOptions } from '${STENCIL_INTERNAL_CLIENT_ID}';`,
@@ -164,15 +170,23 @@ const generateEntryPoint = (outputTarget: d.OutputTargetDistCustomElements, _bui
     imp.push(`import { globalScripts } from '${STENCIL_APP_GLOBALS_ID}';`, `globalScripts();`);
   }
 
-  return [...imp, ...exp].join('\n') + '\n';
+  return imp.join('\n') + '\n';
 };
 
+/**
+ *
+ * @param config
+ * @param compilerCtx
+ * @param components
+ * @param outputTarget
+ * @returns
+ */
 const getCustomElementBundleCustomTransformer = (
   config: d.Config,
   compilerCtx: d.CompilerCtx,
   components: d.ComponentCompilerMeta[],
   outputTarget: d.OutputTargetDistCustomElements
-) => {
+): ts.TransformerFactory<ts.SourceFile>[] => {
   const transformOpts: d.TransformOptions = {
     coreImportPath: STENCIL_INTERNAL_CLIENT_ID,
     componentExport: null,
