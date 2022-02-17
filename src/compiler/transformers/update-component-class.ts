@@ -33,6 +33,8 @@ export const updateComponentClass = (
   return createConstClass(transformOpts, classNode, heritageClauses, members);
 };
 
+// TODO: May need to consider how CJS is generated?
+// TODO: May need to consider how else this may be called?
 const createConstClass = (
   transformOpts: d.TransformOptions,
   classNode: ts.ClassDeclaration,
@@ -52,6 +54,7 @@ const createConstClass = (
     constModifiers.push(ts.createModifier(ts.SyntaxKind.ExportKeyword));
   }
 
+  // this is the class declaration
   return ts.createVariableStatement(
     constModifiers,
     ts.createVariableDeclarationList(
