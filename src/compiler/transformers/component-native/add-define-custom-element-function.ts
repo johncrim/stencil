@@ -31,18 +31,18 @@ export const addDefineCustomElementFunctions = (
         const principalComponent = moduleFile.cmps[0];
         tagNames.push(principalComponent.tagName);
 
-        // wraps the initial component class in a `proxyCustomElement` wrapper.
-        // This is what will be exported and called from the `defineCustomElement` call.
-        const proxyDefinition = createComponentMetadataProxy(principalComponent);
+        const proxyCreationCall = createComponentMetadataProxy(principalComponent);
+
+
         const metaExpression = ts.factory.createExpressionStatement(
           ts.factory.createBinaryExpression(
             ts.factory.createIdentifier(principalComponent.componentClassName),
             ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-            proxyDefinition
+            proxyCreationCall
           )
         );
         newStatements.push(metaExpression);
-        ts.addSyntheticLeadingComment(proxyDefinition, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+        ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         // define the current component - `customElements.define(tagName, MyProxiedComponent);`
         const customElementsDefineCallExpression = ts.factory.createCallExpression(
