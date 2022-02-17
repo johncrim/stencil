@@ -143,6 +143,8 @@ const addCustomElementInputs = (buildCtx: d.BuildCtx, bundleOpts: BundleOptions)
     } else {
       // TODO: I'm not confident as to _why_ this works
       // TODO: Does this work for auto defining children?
+
+      // the `importName` may collide with the `exportName`, alias it just in case it does with `importAs`
       exp.push(
         `import { ${importName} as ${importAs}, defineCustomElement as cmpDefCustomEle } from '${cmp.sourceFilePath}';`
       );
