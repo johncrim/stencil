@@ -32,7 +32,7 @@ export const addDefineCustomElementFunctions = (
         tagNames.push(principalComponent.tagName);
 
         const proxyCreationCall = createComponentMetadataProxy(principalComponent);
-
+        ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         const metaExpression = ts.factory.createExpressionStatement(
           ts.factory.createBinaryExpression(
@@ -42,7 +42,6 @@ export const addDefineCustomElementFunctions = (
           )
         );
         newStatements.push(metaExpression);
-        ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         // define the current component - `customElements.define(tagName, MyProxiedComponent);`
         const customElementsDefineCallExpression = ts.factory.createCallExpression(
