@@ -56,10 +56,11 @@ export const transformToNativeComponentText = (
 
   return outputText;
 };
-
+// somewhere in this mess, we add the core runtime apis
 export const nativeComponentTransform = (
   compilerCtx: d.CompilerCtx,
-  transformOpts: d.TransformOptions
+  transformOpts: d.TransformOptions,
+  outputTarget?: d.OutputTarget,
 ): ts.TransformerFactory<ts.SourceFile> => {
   return (transformCtx) => {
     return (tsSourceFile) => {
@@ -69,7 +70,7 @@ export const nativeComponentTransform = (
         if (ts.isClassDeclaration(node)) {
           const cmp = getComponentMeta(compilerCtx, tsSourceFile, node);
           if (cmp != null) {
-            return updateNativeComponentClass(transformOpts, node, moduleFile, cmp);
+            return updateNativeComponentClass(transformOpts, node, moduleFile, cmp, outputTarget);
           }
         }
 
@@ -92,7 +93,7 @@ export const nativeComponentTransform = (
 
       if (moduleFile.isLegacy) {
         addLegacyApis(moduleFile);
-      }
+      } // here be that place
       tsSourceFile = addImports(transformOpts, tsSourceFile, moduleFile.coreRuntimeApis, transformOpts.coreImportPath);
 
       return tsSourceFile;

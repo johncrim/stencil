@@ -2,9 +2,9 @@ import type * as d from '../../../declarations';
 import { createImportStatement, getModuleFromSourceFile } from '../transform-utils';
 import { dashToPascalCase } from '@utils';
 import ts from 'typescript';
-import { xyzRenameCreateComponentMetadataProxy } from '../add-component-meta-proxy';
-import { addCoreRuntimeApi, RUNTIME_APIS } from '../core-runtime-apis';
-
+// import { xyzRenameCreateComponentMetadataProxy } from '../add-component-meta-proxy';
+// import { addCoreRuntimeApi, RUNTIME_APIS } from '../core-runtime-apis';
+// TODO: HAS TO BE SEPARATE, AS TRANSFORM NATIVE TOUCHES A LOT OF STUFF
 /**
  * Import and define components along with any component dependents within the `dist-custom-elements` output.
  * Adds `defineCustomElement()` function for all components.
@@ -24,24 +24,33 @@ export const addDefineCustomElementFunctions = (
       const newStatements: ts.Statement[] = [];
       const caseStatements: ts.CaseClause[] = [];
       const tagNames: string[] = [];
+// i think we need to decouple this - the problem is that we add this CR-API, but that doesn't get added as an import for a long time.
+// idk if its removed if we reorder this, but at the end of the day, we need proxyCustomElement to be added before we add the call to pCE with an anonymous class.
+// the problem, is that the anonymous class exists properly after this transformer is called. so what we really need is
+// 1. add the API
+// 2. Generate the anonymous class
+// 3. Use that anon class in the pCE call
+// 4. call add imports
+// 5. build out the recusive calls
 
-      addCoreRuntimeApi(moduleFile, RUNTIME_APIS.proxyCustomElement);
+      // TODO RM - the nice thing is that we cannot duplicate additions. Even if it did, then well who cares, we could fix that after buld maybe? not my biggest concern
+      // addCoreRuntimeApi(moduleFile, RUNTIME_APIS.proxyCustomElement);
 
       if (moduleFile.cmps.length) {
         const principalComponent = moduleFile.cmps[0];
         tagNames.push(principalComponent.tagName);
 
-        const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent);
-        ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
-
-        const metaExpression = ts.factory.createExpressionStatement(
-          ts.factory.createBinaryExpression(
-            ts.factory.createIdentifier(principalComponent.componentClassName),
-            ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-            proxyCreationCall
-          )
-        );
-        newStatements.push(metaExpression);
+        // const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent);
+        // ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+        //
+        // const metaExpression = ts.factory.createExpressionStatement(
+        //   ts.factory.createBinaryExpression(
+        //     ts.factory.createIdentifier(principalComponent.componentClassName),
+        //     ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+        //     proxyCreationCall
+        //   )
+        // );
+        // newStatements.push(metaExpression);
 
         // define the current component - `customElements.define(tagName, MyProxiedComponent);`
         const customElementsDefineCallExpression = ts.factory.createCallExpression(

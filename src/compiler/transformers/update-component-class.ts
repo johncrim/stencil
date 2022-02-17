@@ -1,11 +1,14 @@
 import type * as d from '../../declarations';
 import ts from 'typescript';
+import { DIST_CUSTOM_ELEMENTS } from '../output-targets/output-utils';
+import { xyzRenameCreateComponentMetadataProxy } from './add-component-meta-proxy';
 
 export const updateComponentClass = (
   transformOpts: d.TransformOptions,
   classNode: ts.ClassDeclaration,
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
-  members: ts.ClassElement[]
+  members: ts.ClassElement[],
+  outputTarget?: d.OutputTarget,
 ) => {
   let classModifiers = Array.isArray(classNode.modifiers) ? classNode.modifiers.slice() : [];
 
@@ -30,7 +33,7 @@ export const updateComponentClass = (
   }
 
   // ESM with export
-  return createConstClass(transformOpts, classNode, heritageClauses, members);
+  return createConstClass(transformOpts, classNode, heritageClauses, members, outputTarget);
 };
 
 // TODO: May need to consider how CJS is generated?
@@ -39,7 +42,8 @@ const createConstClass = (
   transformOpts: d.TransformOptions,
   classNode: ts.ClassDeclaration,
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
-  members: ts.ClassElement[]
+  members: ts.ClassElement[],
+  outputTarget?: d.OutputTarget,
 ) => {
   const className = classNode.name;
 
@@ -54,6 +58,20 @@ const createConstClass = (
     constModifiers.push(ts.createModifier(ts.SyntaxKind.ExportKeyword));
   }
 
+  if (outputTarget?.type === DIST_CUSTOM_ELEMENTS) {
+    // this is the class declaration
+    const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent);
+    ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+
+    const metaExpression = ts.factory.createExpressionStatement(
+      ts.factory.createBinaryExpression(
+        ts.factory.createIdentifier(principalComponent.componentClassName),
+        ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+        proxyCreationCall
+      )
+    );
+    newStatements.push(metaExpression);
+  }
   // this is the class declaration
   return ts.createVariableStatement(
     constModifiers,

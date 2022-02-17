@@ -19,6 +19,9 @@ import { removeCollectionImports } from '../../transformers/remove-collection-im
 import { STENCIL_INTERNAL_CLIENT_ID, USER_INDEX_ENTRY_ID, STENCIL_APP_GLOBALS_ID } from '../../bundle/entry-alias-ids';
 import { updateStencilCoreImports } from '../../transformers/update-stencil-core-import';
 import * as ts from 'typescript';
+import {
+  addDefineCustomElementFunctionsInit
+} from '../../transformers/component-native/add-define-custom-element-function-init';
 
 export const outputCustomElements = async (
   config: d.Config,
@@ -202,9 +205,10 @@ const getCustomElementBundleCustomTransformer = (
     styleImportData: 'queryparams',
   };
   return [
-    addDefineCustomElementFunctions(compilerCtx, components, outputTarget),
+    addDefineCustomElementFunctionsInit(compilerCtx, components, outputTarget),
     updateStencilCoreImports(transformOpts.coreImportPath),
-    nativeComponentTransform(compilerCtx, transformOpts),
+    nativeComponentTransform(compilerCtx, transformOpts, outputTarget),
+    addDefineCustomElementFunctions(compilerCtx, components, outputTarget),
     removeCollectionImports(compilerCtx),
   ];
 };
