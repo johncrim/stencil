@@ -135,7 +135,7 @@ const addCustomElementInputs = (buildCtx: d.BuildCtx, bundleOpts: BundleOptions)
     const exp: string[] = [];
     const exportName = dashToPascalCase(cmp.tagName);
     const importName = cmp.componentClassName;
-    const importAs = `__stencilCustomElement${cmp.componentClassName}`;
+    const importAs = `$Cmp${exportName}`;
     const coreKey = `\0${exportName}`;
 
     if (cmp.isPlain) {
