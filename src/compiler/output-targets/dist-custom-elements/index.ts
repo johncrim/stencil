@@ -177,6 +177,7 @@ const generateEntryPoint = (outputTarget: d.OutputTargetDistCustomElements): str
   return imp.join('\n') + '\n';
 };
 
+// TODO: Rename
 /**
  *
  * @param config

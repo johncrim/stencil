@@ -43,7 +43,7 @@ export const createComponentMetadataProxy = (compilerMeta: d.ComponentCompilerMe
 
 export const xyzRenameCreateComponentMetadataProxy = (compilerMeta: d.ComponentCompilerMeta): ts.CallExpression => {
   const compactMeta: d.ComponentRuntimeMetaCompact = formatComponentRuntimeMeta(compilerMeta, true);
-
+// TODO: What does createCallExpr accept? Can I turn the anon class into what it accepts?
   const literalCmpClassName = ts.factory.createIdentifier(compilerMeta.componentClassName);
   const literalMeta = convertValueToLiteral(compactMeta);
 
