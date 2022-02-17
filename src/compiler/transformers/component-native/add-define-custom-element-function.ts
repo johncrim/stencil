@@ -31,31 +31,14 @@ export const addDefineCustomElementFunctions = (
         const principalComponent = moduleFile.cmps[0];
         tagNames.push(principalComponent.tagName);
 
-        // generate an internal classname that must not collide with existing identifiers
-        const xyzAbcRenameInternalClassName = `__stencilCustomElement${principalComponent.componentClassName}`;
+        // wraps the initial component class in a `proxyCustomElement` wrapper.
+        // This is what will be exported and called from the `defineCustomElement` call.
         const proxyDefinition = createComponentMetadataProxy(principalComponent);
-
-        /**
-         * Generate a variable statement of the form:
-         * ```ts
-         * const xyzAbcRenameInternalClassName = proxyCustomElement(ClassReference, Metadata);
-         * ```
-         * where
-         * - `ClassReference` is a reference to a Stencil component class to be wrapped in a proxy
-         * - `Metadata` is the compiler metadata associated with the Stencil component
-         */
-        const metaExpression = ts.factory.createVariableStatement(
-          [],
-          ts.factory.createVariableDeclarationList(
-            [
-              ts.factory.createVariableDeclaration(
-                xyzAbcRenameInternalClassName,
-                undefined,
-                undefined,
-                proxyDefinition,
-              ),
-            ],
-            ts.NodeFlags.Const
+        const metaExpression = ts.factory.createExpressionStatement(
+          ts.factory.createBinaryExpression(
+            ts.factory.createIdentifier(principalComponent.componentClassName),
+            ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+            proxyDefinition
           )
         );
         newStatements.push(metaExpression);
@@ -65,7 +48,7 @@ export const addDefineCustomElementFunctions = (
         const customElementsDefineCallExpression = ts.factory.createCallExpression(
           ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('customElements'), 'define'),
           undefined,
-          [ts.factory.createIdentifier('tagName'), ts.factory.createIdentifier(xyzAbcRenameInternalClassName)]
+          [ts.factory.createIdentifier('tagName'), ts.factory.createIdentifier(principalComponent.componentClassName)]
         );
         // create a `case` block that defines the current component. We'll add them to our switch statement later.
         caseStatements.push(
