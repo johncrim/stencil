@@ -2,7 +2,7 @@ import type * as d from '../../../declarations';
 import { createImportStatement, getModuleFromSourceFile } from '../transform-utils';
 import { dashToPascalCase } from '@utils';
 import ts from 'typescript';
-import { createComponentMetadataProxy } from '../add-component-meta-proxy';
+import { xyzRenameCreateComponentMetadataProxy } from '../add-component-meta-proxy';
 import { addCoreRuntimeApi, RUNTIME_APIS } from '../core-runtime-apis';
 
 /**
@@ -31,7 +31,7 @@ export const addDefineCustomElementFunctions = (
         const principalComponent = moduleFile.cmps[0];
         tagNames.push(principalComponent.tagName);
 
-        const proxyCreationCall = createComponentMetadataProxy(principalComponent);
+        const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         const metaExpression = ts.factory.createExpressionStatement(
