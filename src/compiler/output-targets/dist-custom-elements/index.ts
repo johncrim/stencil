@@ -22,6 +22,7 @@ import * as ts from 'typescript';
 import {
   addDefineCustomElementFunctionsInit
 } from '../../transformers/component-native/add-define-custom-element-function-init';
+import { proxyCustomElement } from '../../transformers/component-native/proxy-custom-element-function';
 
 export const outputCustomElements = async (
   config: d.Config,
@@ -208,6 +209,7 @@ const getCustomElementBundleCustomTransformer = (
     addDefineCustomElementFunctionsInit(compilerCtx),
     updateStencilCoreImports(transformOpts.coreImportPath),
     nativeComponentTransform(compilerCtx, transformOpts, outputTarget),
+    proxyCustomElement(compilerCtx),
     addDefineCustomElementFunctions(compilerCtx, components, outputTarget),
     removeCollectionImports(compilerCtx),
   ];

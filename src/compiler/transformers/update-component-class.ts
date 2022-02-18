@@ -1,7 +1,7 @@
 import type * as d from '../../declarations';
 import ts from 'typescript';
-import { DIST_CUSTOM_ELEMENTS } from '../output-targets/output-utils';
-import { xyzRenameCreateComponentMetadataProxy } from './add-component-meta-proxy';
+// import { DIST_CUSTOM_ELEMENTS } from '../output-targets/output-utils';
+// import { xyzRenameCreateComponentMetadataProxy } from './add-component-meta-proxy';
 
 export const updateComponentClass = (
   transformOpts: d.TransformOptions,
@@ -44,8 +44,8 @@ const createConstClass = (
   classNode: ts.ClassDeclaration,
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
   members: ts.ClassElement[],
-  outputTarget?: d.OutputTarget,
-  principalComponent?: d.ComponentCompilerMeta,
+  _outputTarget?: d.OutputTarget,
+  _principalComponent?: d.ComponentCompilerMeta,
 ) => {
   const className = classNode.name;
 
@@ -61,26 +61,26 @@ const createConstClass = (
   }
 
   // this is an abomination and should be refactored...heavily
-  if (outputTarget?.type === DIST_CUSTOM_ELEMENTS && principalComponent !== undefined) {
-    const classExpression = ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
-    const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, classExpression);
-
-    ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
-
-    return ts.factory.createVariableStatement(
-      constModifiers,
-      ts.factory.createVariableDeclarationList(
-        [
-          ts.createVariableDeclaration(
-            className,
-            undefined,
-            proxyCreationCall
-          ),
-        ],
-        ts.NodeFlags.Let
-      )
-    );
-  }
+  // if (outputTarget?.type === DIST_CUSTOM_ELEMENTS && principalComponent !== undefined) {
+  //   const classExpression = ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
+  //   const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, classExpression);
+  //
+  //   ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+  //
+  //   return ts.factory.createVariableStatement(
+  //     constModifiers,
+  //     ts.factory.createVariableDeclarationList(
+  //       [
+  //         ts.createVariableDeclaration(
+  //           className,
+  //           undefined,
+  //           proxyCreationCall
+  //         ),
+  //       ],
+  //       ts.NodeFlags.Let
+  //     )
+  //   );
+  // }
 
   return ts.createVariableStatement(
     constModifiers,
