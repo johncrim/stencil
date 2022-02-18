@@ -19,69 +19,51 @@ export const proxyCustomElement = (
   return () => {
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
-      const extracted = (
-        principalComponent: d.ComponentCompilerMeta
-      ): { varDec: ts.VariableDeclaration; statementIdx: number } | null => {
-        for (let i = 0; i < tsSourceFile.statements.length; i++) {
-          const statement = tsSourceFile.statements[i];
-          if (ts.isVariableStatement(statement)) {
-            const classDeclaration = statement.declarationList.declarations.find(
-              (declaration: ts.VariableDeclaration) =>
-                declaration.name.getText() === principalComponent.componentClassName
-            );
-            if (classDeclaration) {
-              return {
-                varDec: classDeclaration,
-                statementIdx: i,
-              };
+      if (!moduleFile.cmps.length) {
+        return tsSourceFile;
+      }
+      const principalComponent = moduleFile.cmps[0];
+
+      for (let i = 0; i < tsSourceFile.statements.length; i++) {
+        const statement = tsSourceFile.statements[i];
+        if (ts.isVariableStatement(statement)) {
+          for (let j = 0; j < statement.declarationList.declarations.length; j++) {
+            const declaration = statement.declarationList.declarations[j];
+            if (declaration.name.getText() === principalComponent.componentClassName) {
+                // get the initializer from the Stencil component's class declaration
+                const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
+                ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+
+                const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(declaration, declaration.name,  declaration.exclamationToken,declaration.type, proxyCreationCall);
+                const proxiedComponentVariableStatement = ts.factory.updateVariableStatement(
+                  statement,
+                  [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+                  ts.factory.updateVariableDeclarationList(statement.declarationList, [
+                    ...statement.declarationList.declarations.slice(0, j),
+                    proxiedComponentDeclaration,
+                    ...statement.declarationList.declarations.slice(j+1),
+                  ])
+                );
+                ///
+
+                tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
+                  ...tsSourceFile.statements.slice(0, i),
+                  proxiedComponentVariableStatement,
+                  ...tsSourceFile.statements.slice(i + 1),
+                ]);
+              // TODO: There's a side effect related to moving this down....find it
+              tsSourceFile = addImports(
+                transformOpts,
+                tsSourceFile,
+                [RUNTIME_APIS.proxyCustomElement],
+                transformOpts.coreImportPath
+              );
+                return tsSourceFile;
             }
           }
         }
-        return null;
-      };
-
-      if (moduleFile.cmps.length) {
-        // TODO: There's a side effect related to moving this down....find it
-        tsSourceFile = addImports(
-          transformOpts,
-          tsSourceFile,
-          [RUNTIME_APIS.proxyCustomElement],
-          transformOpts.coreImportPath
-        );
-
-        const principalComponent = moduleFile.cmps[0];
-        const result = extracted(principalComponent);
-        if (result === null) {
-          return tsSourceFile;
-        }
-
-        let { statementIdx, varDec } = result;
-
-        // get the initializer from the Stencil component's class declaration
-        const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, varDec.initializer);
-        ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
-
-        const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(varDec, varDec.name,  undefined,undefined, proxyCreationCall);
-
-        ////
-        const proxiedComponentVariableStatement = ts.factory.createVariableStatement(
-          [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-          ts.factory.createVariableDeclarationList(
-            [proxiedComponentDeclaration],
-            ts.NodeFlags.Const
-          )
-        );
-        ///
-
-
-        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
-          ...tsSourceFile.statements.slice(0, statementIdx),
-          proxiedComponentVariableStatement,
-          ...tsSourceFile.statements.slice(statementIdx + 1),
-        ]);
       }
-
-      return tsSourceFile;
-    };
+        return tsSourceFile;
+      }
   };
 };
