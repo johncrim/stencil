@@ -16,18 +16,18 @@ export const proxyCustomElement = (
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
 
-      const extracted = (principalComponent: d.ComponentCompilerMeta) => {
-        let statementIdx = -1;
-        let myStatement = undefined;
+      const extracted = (principalComponent: d.ComponentCompilerMeta): {myStatement: ts.Expression | null, statementIdx: number | null } => {
+        let statementIdx = null;
+        let myStatement = null;
+
         for (let i = 0; i < tsSourceFile.statements.length; i++) {
-          let statement = tsSourceFile.statements[i];
+          const statement = tsSourceFile.statements[i];
           if (ts.isVariableStatement(statement)) {
-            for (let declaration of statement.declarationList.declarations) {
-              if (declaration.name.getText() === principalComponent.componentClassName) {
-                return {
-                  myStatement: declaration.initializer,
-                  statementIdx: i,
-                }
+            const classDeclaration = statement.declarationList.declarations.find((declaration: ts.VariableDeclaration) => declaration.name.getText() === principalComponent.componentClassName);
+            if (classDeclaration) {
+              return {
+                myStatement: classDeclaration.initializer,
+                statementIdx: i,
               }
             }
           }
@@ -39,11 +39,10 @@ export const proxyCustomElement = (
         const principalComponent = moduleFile.cmps[0];
         let { statementIdx, myStatement } = extracted(principalComponent);
 
-        if (!myStatement) {
-          // we couldn't find it, so we're done
+        if (myStatement === null || statementIdx === null) {
           return tsSourceFile;
+
         }
-        // const classExpression: any = null; // TODO: Find me //ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
         const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, myStatement);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
