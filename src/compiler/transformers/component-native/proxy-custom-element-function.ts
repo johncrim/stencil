@@ -30,40 +30,49 @@ export const proxyCustomElement = (
           for (let j = 0; j < statement.declarationList.declarations.length; j++) {
             const declaration = statement.declarationList.declarations[j];
             if (declaration.name.getText() === principalComponent.componentClassName) {
-                // get the initializer from the Stencil component's class declaration
-                const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
-                ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+              // get the initializer from the Stencil component's class declaration
+              const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
+              ts.addSyntheticLeadingComment(
+                proxyCreationCall,
+                ts.SyntaxKind.MultiLineCommentTrivia,
+                '@__PURE__',
+                false
+              );
 
-                const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(declaration, declaration.name,  declaration.exclamationToken,declaration.type, proxyCreationCall);
-                const proxiedComponentVariableStatement = ts.factory.updateVariableStatement(
-                  statement,
-                  [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-                  ts.factory.updateVariableDeclarationList(statement.declarationList, [
-                    ...statement.declarationList.declarations.slice(0, j),
-                    proxiedComponentDeclaration,
-                    ...statement.declarationList.declarations.slice(j+1),
-                  ])
-                );
-                ///
+              const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(
+                declaration,
+                declaration.name,
+                declaration.exclamationToken,
+                declaration.type,
+                proxyCreationCall
+              );
+              const proxiedComponentVariableStatement = ts.factory.updateVariableStatement(
+                statement,
+                [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+                ts.factory.updateVariableDeclarationList(statement.declarationList, [
+                  ...statement.declarationList.declarations.slice(0, j),
+                  proxiedComponentDeclaration,
+                  ...statement.declarationList.declarations.slice(j + 1),
+                ])
+              );
 
-                tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
-                  ...tsSourceFile.statements.slice(0, i),
-                  proxiedComponentVariableStatement,
-                  ...tsSourceFile.statements.slice(i + 1),
-                ]);
-              // TODO: There's a side effect related to moving this down....find it
+              tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
+                ...tsSourceFile.statements.slice(0, i),
+                proxiedComponentVariableStatement,
+                ...tsSourceFile.statements.slice(i + 1),
+              ]);
               tsSourceFile = addImports(
                 transformOpts,
                 tsSourceFile,
                 [RUNTIME_APIS.proxyCustomElement],
                 transformOpts.coreImportPath
               );
-                return tsSourceFile;
+              return tsSourceFile;
             }
           }
         }
       }
-        return tsSourceFile;
-      }
+      return tsSourceFile;
+    };
   };
 };
