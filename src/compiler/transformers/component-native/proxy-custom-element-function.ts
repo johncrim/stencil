@@ -20,13 +20,6 @@ export const proxyCustomElement = (
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
 
-      tsSourceFile = addImports(
-        transformOpts,
-        tsSourceFile,
-        [RUNTIME_APIS.proxyCustomElement],
-        transformOpts.coreImportPath
-      );
-
       const extracted = (
         principalComponent: d.ComponentCompilerMeta
       ): { myStatement: ts.Expression | null; statementIdx: number | null } => {
@@ -50,6 +43,13 @@ export const proxyCustomElement = (
         }
         return { statementIdx, myStatement };
       };
+
+      tsSourceFile = addImports(
+        transformOpts,
+        tsSourceFile,
+        [RUNTIME_APIS.proxyCustomElement],
+        transformOpts.coreImportPath
+      );
 
       if (moduleFile.cmps.length) {
         const principalComponent = moduleFile.cmps[0];
