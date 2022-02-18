@@ -2,19 +2,26 @@ import type * as d from '../../../declarations';
 import { createAnonymousClassMetadataProxy } from '../add-component-meta-proxy';
 import { getModuleFromSourceFile } from '../transform-utils';
 import ts from 'typescript';
+import {  RUNTIME_APIS } from '../core-runtime-apis';
+import { addImports } from '../add-imports';
 
 /**
  * Import and define components along with any component dependents within the `dist-custom-elements` output.
  * Adds `defineCustomElement()` function for all components.
- * @param compilerCtx - current compiler context
+ * @param compilerCtx current compiler context
+ * @param transformOpts TPODO
  * @returns a TS AST transformer factory function
  */
 export const proxyCustomElement = (
   compilerCtx: d.CompilerCtx,
+  transformOpts: d.TransformOptions
 ): ts.TransformerFactory<ts.SourceFile> => {
   return () => {
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
+
+      // addCoreRuntimeApi(moduleFile, RUNTIME_APIS.proxyCustomElement);
+      tsSourceFile = addImports(transformOpts, tsSourceFile, [RUNTIME_APIS.proxyCustomElement], transformOpts.coreImportPath);
 
       const extracted = (principalComponent: d.ComponentCompilerMeta): {myStatement: ts.Expression | null, statementIdx: number | null } => {
         let statementIdx = null;
