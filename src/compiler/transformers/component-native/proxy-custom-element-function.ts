@@ -1,5 +1,5 @@
 import type * as d from '../../../declarations';
-import { xyzRenameCreateComponentMetadataProxy } from '../add-component-meta-proxy';
+import { createAnonymousClassMetadataProxy } from '../add-component-meta-proxy';
 import { getModuleFromSourceFile } from '../transform-utils';
 import ts from 'typescript';
 
@@ -43,7 +43,7 @@ export const proxyCustomElement = (
           return tsSourceFile;
 
         }
-        const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, myStatement);
+        const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, myStatement);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         const _ryanUseThisBelow = ts.factory.createVariableStatement(
