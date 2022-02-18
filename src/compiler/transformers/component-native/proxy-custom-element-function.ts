@@ -29,19 +29,22 @@ export const proxyCustomElement = (
       // 4. call add imports
       // 5. build out the recursive calls
 
+      let statmentIdx = -1;
       if (moduleFile.cmps.length) {
         const principalComponent = moduleFile.cmps[0];
 
         ////
 
         let myStatement = undefined;
-        for (let statement of tsSourceFile.statements) {
+        for (let i = 0; i < tsSourceFile.statements.length; i++) {
+          let statement = tsSourceFile.statements[i];
           if (ts.isVariableStatement(statement)) {
             for (let declaration of statement.declarationList.declarations) {
                 // TODO: should we be using escapedText?
                 if (declaration.name.getText() === principalComponent.componentClassName) {
                   // ok we think we've found it
                   myStatement = declaration.initializer;
+                  statmentIdx = i;
                   break;
                 }
               }
@@ -74,11 +77,11 @@ export const proxyCustomElement = (
             ts.NodeFlags.Let
           )
         );
-        newStatements.push(_ryanUseThisBelow)
+        // newStatements.push(_ryanUseThisBelow)
+        let contents = [...tsSourceFile.statements.slice(0, statmentIdx), _ryanUseThisBelow, ...tsSourceFile.statements.slice(statmentIdx+1)];
+        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...contents, ...newStatements]);
       }
 
-
-      tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...tsSourceFile.statements, ...newStatements]);
 
       return tsSourceFile;
     };
