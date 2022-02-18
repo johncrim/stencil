@@ -26,15 +26,12 @@ export const proxyCustomElement = (
               // TODO: should we be using escapedText?
               if (declaration.name.getText() === principalComponent.componentClassName) {
                 // ok we think we've found it
-                myStatement = declaration.initializer;
-                statementIdx = i;
-                break;
+                return {
+                  myStatement: declaration.initializer,
+                  statementIdx: i,
+                }
               }
             }
-            if (myStatement) {
-              break;
-            }
-            // TODO: HACKY BREAK BREAK NEEDED
           }
         }
         return { statementIdx, myStatement };
