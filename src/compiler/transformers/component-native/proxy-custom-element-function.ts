@@ -23,9 +23,7 @@ export const proxyCustomElement = (
           let statement = tsSourceFile.statements[i];
           if (ts.isVariableStatement(statement)) {
             for (let declaration of statement.declarationList.declarations) {
-              // TODO: should we be using escapedText?
               if (declaration.name.getText() === principalComponent.componentClassName) {
-                // ok we think we've found it
                 return {
                   myStatement: declaration.initializer,
                   statementIdx: i,
