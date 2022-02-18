@@ -15,38 +15,41 @@ export const proxyCustomElement = (
   return () => {
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
-      const newStatements: ts.Statement[] = [];
 
-      let statementIdx = -1;
-      if (moduleFile.cmps.length) {
-        const principalComponent = moduleFile.cmps[0];
-
+      const extracted = (principalComponent: d.ComponentCompilerMeta) => {
+        let statementIdx = -1;
         let myStatement = undefined;
         for (let i = 0; i < tsSourceFile.statements.length; i++) {
           let statement = tsSourceFile.statements[i];
           if (ts.isVariableStatement(statement)) {
             for (let declaration of statement.declarationList.declarations) {
-                // TODO: should we be using escapedText?
-                if (declaration.name.getText() === principalComponent.componentClassName) {
-                  // ok we think we've found it
-                  myStatement = declaration.initializer;
-                  statementIdx = i;
-                  break;
-                }
+              // TODO: should we be using escapedText?
+              if (declaration.name.getText() === principalComponent.componentClassName) {
+                // ok we think we've found it
+                myStatement = declaration.initializer;
+                statementIdx = i;
+                break;
               }
+            }
             if (myStatement) {
               break;
             }
-          // TODO: HACKY BREAK BREAK NEEDED
-        }}
+            // TODO: HACKY BREAK BREAK NEEDED
+          }
+        }
+        return { statementIdx, myStatement };
+      }
+
+      if (moduleFile.cmps.length) {
+        const principalComponent = moduleFile.cmps[0];
+        let { statementIdx, myStatement } = extracted(principalComponent);
 
         if (!myStatement) {
           // we couldn't find it, so we're done
           return tsSourceFile;
         }
         // const classExpression: any = null; // TODO: Find me //ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
-        const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, myStatement as any);
-
+        const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, myStatement);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         const _ryanUseThisBelow = ts.factory.createVariableStatement(
@@ -64,7 +67,7 @@ export const proxyCustomElement = (
         );
 
         let contents = [...tsSourceFile.statements.slice(0, statementIdx), _ryanUseThisBelow, ...tsSourceFile.statements.slice(statementIdx+1)];
-        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...contents, ...newStatements]);
+        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...contents]);
       }
 
 
