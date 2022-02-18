@@ -61,20 +61,20 @@ export const proxyCustomElement = (
         const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, myStatement);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
-        const _ryanUseThisBelow = ts.factory.createVariableStatement(
+        const proxiedComponentDeclaration = ts.factory.createVariableDeclaration(principalComponent.componentClassName, undefined, undefined, proxyCreationCall);
+        const proxiedComponentVariableStatement = ts.factory.createVariableStatement(
           [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           ts.factory.createVariableDeclarationList(
-            [ts.createVariableDeclaration(principalComponent.componentClassName, undefined, proxyCreationCall)],
+            [proxiedComponentDeclaration],
             ts.NodeFlags.Const
           )
         );
 
-        let contents = [
+        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
           ...tsSourceFile.statements.slice(0, statementIdx),
-          _ryanUseThisBelow,
+          proxiedComponentVariableStatement,
           ...tsSourceFile.statements.slice(statementIdx + 1),
-        ];
-        tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...contents]);
+        ]);
       }
 
       return tsSourceFile;
