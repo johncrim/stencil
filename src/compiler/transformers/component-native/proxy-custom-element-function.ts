@@ -9,7 +9,7 @@ import { addImports } from '../add-imports';
  * Import and define components along with any component dependents within the `dist-custom-elements` output.
  * Adds `defineCustomElement()` function for all components.
  * @param compilerCtx current compiler context
- * @param transformOpts transpilation options
+ * @param transformOpts transpilation options for the current build
  * @returns a TS AST transformer factory function
  */
 export const proxyCustomElement = (
@@ -20,7 +20,6 @@ export const proxyCustomElement = (
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
 
-      // addCoreRuntimeApi(moduleFile, RUNTIME_APIS.proxyCustomElement);
       tsSourceFile = addImports(transformOpts, tsSourceFile, [RUNTIME_APIS.proxyCustomElement], transformOpts.coreImportPath);
 
       const extracted = (principalComponent: d.ComponentCompilerMeta): {myStatement: ts.Expression | null, statementIdx: number | null } => {
