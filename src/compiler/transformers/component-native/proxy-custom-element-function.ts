@@ -27,46 +27,52 @@ export const proxyCustomElement = (
       for (let [stmtIndex, stmt] of tsSourceFile.statements.entries()) {
         if (ts.isVariableStatement(stmt)) {
           for (let [declarationIndex, declaration] of stmt.declarationList.declarations.entries()) {
-            if (declaration.name.getText() === principalComponent.componentClassName) {
-              // get the initializer from the Stencil component's class declaration
-              const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
-              ts.addSyntheticLeadingComment(
-                proxyCreationCall,
-                ts.SyntaxKind.MultiLineCommentTrivia,
-                '@__PURE__',
-                false
-              );
-
-              const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(
-                declaration,
-                declaration.name,
-                declaration.exclamationToken,
-                declaration.type,
-                proxyCreationCall
-              );
-              const proxiedComponentVariableStatement = ts.factory.updateVariableStatement(
-                stmt,
-                [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-                ts.factory.updateVariableDeclarationList(stmt.declarationList, [
-                  ...stmt.declarationList.declarations.slice(0, declarationIndex),
-                  proxiedComponentDeclaration,
-                  ...stmt.declarationList.declarations.slice(declarationIndex + 1),
-                ])
-              );
-
-              tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
-                ...tsSourceFile.statements.slice(0, stmtIndex),
-                proxiedComponentVariableStatement,
-                ...tsSourceFile.statements.slice(stmtIndex + 1),
-              ]);
-              tsSourceFile = addImports(
-                transformOpts,
-                tsSourceFile,
-                [RUNTIME_APIS.proxyCustomElement],
-                transformOpts.coreImportPath
-              );
-              return tsSourceFile;
+            if (declaration.name.getText() !== principalComponent.componentClassName) {
+              continue;
             }
+
+            // get the initializer from the Stencil component's class declaration, wrap it in a component proxy
+            const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
+            ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
+
+            // update the variable declaration to use the new initializer
+            const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(
+              declaration,
+              declaration.name,
+              declaration.exclamationToken,
+              declaration.type,
+              proxyCreationCall
+            );
+
+            // update the declaration list that contains the updated variable declaration
+            const updatedDeclarationList = ts.factory.updateVariableDeclarationList(stmt.declarationList, [
+              ...stmt.declarationList.declarations.slice(0, declarationIndex),
+              proxiedComponentDeclaration,
+              ...stmt.declarationList.declarations.slice(declarationIndex + 1),
+            ]);
+
+            // update the variable statement containing the updated declaration list
+            const updatedVariableStatement = ts.factory.updateVariableStatement(
+              stmt,
+              [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+              updatedDeclarationList
+            );
+
+            // update the source file's statements to use the new variable statement
+            tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
+              ...tsSourceFile.statements.slice(0, stmtIndex),
+              updatedVariableStatement,
+              ...tsSourceFile.statements.slice(stmtIndex + 1),
+            ]);
+
+            // finally, ensure that the proxyCustomElement function is imported
+            tsSourceFile = addImports(
+              transformOpts,
+              tsSourceFile,
+              [RUNTIME_APIS.proxyCustomElement],
+              transformOpts.coreImportPath
+            );
+            return tsSourceFile;
           }
         }
       }
