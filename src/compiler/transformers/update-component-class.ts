@@ -82,7 +82,7 @@ const createConstClass = (
     );
   }
 
-  return ts.factory.createVariableStatement(
+  return ts.createVariableStatement(
     constModifiers,
     ts.factory.createVariableDeclarationList(
       [
