@@ -54,7 +54,7 @@ const createConstClass = (
 
   return ts.createVariableStatement(
     constModifiers,
-    ts.factory.createVariableDeclarationList(
+    ts.createVariableDeclarationList(
       [
         ts.createVariableDeclaration(
           className,
