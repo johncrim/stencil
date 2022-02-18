@@ -4,6 +4,7 @@ import { formatComponentRuntimeMeta } from '@utils';
 import { PROXY_CUSTOM_ELEMENT, RUNTIME_APIS, addCoreRuntimeApi } from './core-runtime-apis';
 import ts from 'typescript';
 
+// TODO: Are we calling this already?? No, but let's come back to this
 export const addModuleMetadataProxies = (tsSourceFile: ts.SourceFile, moduleFile: d.Module) => {
   const statements = tsSourceFile.statements.slice();
 
