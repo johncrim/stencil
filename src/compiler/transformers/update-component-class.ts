@@ -1,15 +1,11 @@
 import type * as d from '../../declarations';
 import ts from 'typescript';
-// import { DIST_CUSTOM_ELEMENTS } from '../output-targets/output-utils';
-// import { xyzRenameCreateComponentMetadataProxy } from './add-component-meta-proxy';
 
 export const updateComponentClass = (
   transformOpts: d.TransformOptions,
   classNode: ts.ClassDeclaration,
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
-  members: ts.ClassElement[],
-  outputTarget?: d.OutputTarget,
-  cmp?: d.ComponentCompilerMeta,
+  members: ts.ClassElement[]
 ) => {
   let classModifiers = Array.isArray(classNode.modifiers) ? classNode.modifiers.slice() : [];
 
@@ -34,18 +30,14 @@ export const updateComponentClass = (
   }
 
   // ESM with export
-  return createConstClass(transformOpts, classNode, heritageClauses, members, outputTarget, cmp);
+  return createConstClass(transformOpts, classNode, heritageClauses, members);
 };
 
-// TODO: May need to consider how CJS is generated?
-// TODO: May need to consider how else this may be called?
 const createConstClass = (
   transformOpts: d.TransformOptions,
   classNode: ts.ClassDeclaration,
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
-  members: ts.ClassElement[],
-  _outputTarget?: d.OutputTarget,
-  _principalComponent?: d.ComponentCompilerMeta,
+  members: ts.ClassElement[]
 ) => {
   const className = classNode.name;
 
@@ -59,28 +51,6 @@ const createConstClass = (
   if (transformOpts.componentExport !== 'customelement') {
     constModifiers.push(ts.createModifier(ts.SyntaxKind.ExportKeyword));
   }
-
-  // this is an abomination and should be refactored...heavily
-  // if (outputTarget?.type === DIST_CUSTOM_ELEMENTS && principalComponent !== undefined) {
-  //   const classExpression = ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
-  //   const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, classExpression);
-  //
-  //   ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
-  //
-  //   return ts.factory.createVariableStatement(
-  //     constModifiers,
-  //     ts.factory.createVariableDeclarationList(
-  //       [
-  //         ts.createVariableDeclaration(
-  //           className,
-  //           undefined,
-  //           proxyCreationCall
-  //         ),
-  //       ],
-  //       ts.NodeFlags.Let
-  //     )
-  //   );
-  // }
 
   return ts.createVariableStatement(
     constModifiers,

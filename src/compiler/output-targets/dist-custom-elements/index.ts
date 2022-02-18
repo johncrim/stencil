@@ -208,7 +208,7 @@ const getCustomElementBundleCustomTransformer = (
   return [
     addDefineCustomElementFunctionsInit(compilerCtx),
     updateStencilCoreImports(transformOpts.coreImportPath),
-    nativeComponentTransform(compilerCtx, transformOpts, outputTarget),
+    nativeComponentTransform(compilerCtx, transformOpts),
     proxyCustomElement(compilerCtx),
     addDefineCustomElementFunctions(compilerCtx, components, outputTarget),
     removeCollectionImports(compilerCtx),
