@@ -56,7 +56,7 @@ export const proxyCustomElement = (
                 proxyCreationCall
               ),
             ],
-            ts.NodeFlags.Let
+            ts.NodeFlags.Const
           )
         );
 
