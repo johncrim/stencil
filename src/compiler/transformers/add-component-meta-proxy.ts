@@ -39,7 +39,11 @@ export const createComponentMetadataProxy = (compilerMeta: d.ComponentCompilerMe
   const literalCmpClassName = ts.factory.createIdentifier(compilerMeta.componentClassName);
   const literalMeta = convertValueToLiteral(compactMeta);
 
-  return ts.factory.createCallExpression(ts.factory.createIdentifier(PROXY_CUSTOM_ELEMENT), [], [literalCmpClassName, literalMeta]);
+  return ts.factory.createCallExpression(
+    ts.factory.createIdentifier(PROXY_CUSTOM_ELEMENT),
+    [],
+    [literalCmpClassName, literalMeta]
+  );
 };
 
 /**
@@ -58,7 +62,10 @@ export const createComponentMetadataProxy = (compilerMeta: d.ComponentCompilerMe
  * @param clazz the anonymous class to proxy
  * @returns the generated call expression
  */
-export const createAnonymousClassMetadataProxy = (compilerMeta: d.ComponentCompilerMeta, clazz: ts.Expression): ts.CallExpression => {
+export const createAnonymousClassMetadataProxy = (
+  compilerMeta: d.ComponentCompilerMeta,
+  clazz: ts.Expression
+): ts.CallExpression => {
   const compactMeta: d.ComponentRuntimeMetaCompact = formatComponentRuntimeMeta(compilerMeta, true);
   const literalMeta = convertValueToLiteral(compactMeta);
 
