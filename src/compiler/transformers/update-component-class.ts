@@ -60,21 +60,14 @@ const createConstClass = (
     constModifiers.push(ts.createModifier(ts.SyntaxKind.ExportKeyword));
   }
 
+  // this is an abomination and should be refactored...heavily
   if (outputTarget?.type === DIST_CUSTOM_ELEMENTS && principalComponent !== undefined) {
-    // this is the class declaration
     const classExpression = ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
     const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, classExpression);
 
     ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
-    // const metaExpression = ts.factory.createExpressionStatement(
-    //   ts.factory.createBinaryExpression(
-    //     className,
-    //     ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-    //     proxyCreationCall
-    //   )
-    // );
-    const foo = ts.factory.createVariableStatement(
+    return ts.factory.createVariableStatement(
       constModifiers,
       ts.factory.createVariableDeclarationList(
         [
@@ -87,10 +80,8 @@ const createConstClass = (
         ts.NodeFlags.Let
       )
     );
-
-    return foo;
   }
-  // this is the class declaration
+
   return ts.factory.createVariableStatement(
     constModifiers,
     ts.factory.createVariableDeclarationList(
