@@ -9,7 +9,7 @@ import { addImports } from '../add-imports';
  * Import and define components along with any component dependents within the `dist-custom-elements` output.
  * Adds `defineCustomElement()` function for all components.
  * @param compilerCtx current compiler context
- * @param transformOpts TPODO
+ * @param transformOpts transpilation options
  * @returns a TS AST transformer factory function
  */
 export const proxyCustomElement = (

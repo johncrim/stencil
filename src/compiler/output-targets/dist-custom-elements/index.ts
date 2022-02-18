@@ -17,12 +17,9 @@ import { addDefineCustomElementFunctions } from '../../transformers/component-na
 import { optimizeModule } from '../../optimize/optimize-module';
 import { removeCollectionImports } from '../../transformers/remove-collection-imports';
 import { STENCIL_INTERNAL_CLIENT_ID, USER_INDEX_ENTRY_ID, STENCIL_APP_GLOBALS_ID } from '../../bundle/entry-alias-ids';
+import { proxyCustomElement } from '../../transformers/component-native/proxy-custom-element-function';
 import { updateStencilCoreImports } from '../../transformers/update-stencil-core-import';
 import * as ts from 'typescript';
-import {
-  addDefineCustomElementFunctionsInit
-} from '../../transformers/component-native/add-define-custom-element-function-init';
-import { proxyCustomElement } from '../../transformers/component-native/proxy-custom-element-function';
 
 export const outputCustomElements = async (
   config: d.Config,
@@ -206,7 +203,6 @@ const getCustomElementBundleCustomTransformer = (
     styleImportData: 'queryparams',
   };
   return [
-    addDefineCustomElementFunctionsInit(compilerCtx),
     updateStencilCoreImports(transformOpts.coreImportPath),
     nativeComponentTransform(compilerCtx, transformOpts),
     proxyCustomElement(compilerCtx, transformOpts),
