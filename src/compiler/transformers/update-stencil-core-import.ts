@@ -21,7 +21,7 @@ export const updateStencilCoreImports = (updatedCoreImportPath: string): ts.Tran
                 s.importClause.namedBindings.kind === ts.SyntaxKind.NamedImports
               ) {
                 const origImports = s.importClause.namedBindings.elements;
-// idk why we don't keep component, but keep h - nor why we keep what we do
+
                 const keepImports = origImports.map((e) => e.getText()).filter((name) => KEEP_IMPORTS.has(name));
 
                 if (keepImports.length > 0) {
@@ -51,7 +51,7 @@ export const updateStencilCoreImports = (updatedCoreImportPath: string): ts.Tran
         }
         newStatements.push(s);
       });
-// this is changing the entirety of the file, no import splicing
+
       if (madeChanges) {
         return ts.updateSourceFileNode(
           tsSourceFile,
