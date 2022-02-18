@@ -24,11 +24,9 @@ export const proxyCustomElement = (
       }
       const principalComponent = moduleFile.cmps[0];
 
-      for (let i = 0; i < tsSourceFile.statements.length; i++) {
-        const statement = tsSourceFile.statements[i];
-        if (ts.isVariableStatement(statement)) {
-          for (let j = 0; j < statement.declarationList.declarations.length; j++) {
-            const declaration = statement.declarationList.declarations[j];
+      for (let [stmtIndex, stmt] of tsSourceFile.statements.entries()) {
+        if (ts.isVariableStatement(stmt)) {
+          for (let [declarationIndex, declaration] of stmt.declarationList.declarations.entries()) {
             if (declaration.name.getText() === principalComponent.componentClassName) {
               // get the initializer from the Stencil component's class declaration
               const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, declaration.initializer);
@@ -47,19 +45,19 @@ export const proxyCustomElement = (
                 proxyCreationCall
               );
               const proxiedComponentVariableStatement = ts.factory.updateVariableStatement(
-                statement,
+                stmt,
                 [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-                ts.factory.updateVariableDeclarationList(statement.declarationList, [
-                  ...statement.declarationList.declarations.slice(0, j),
+                ts.factory.updateVariableDeclarationList(stmt.declarationList, [
+                  ...stmt.declarationList.declarations.slice(0, declarationIndex),
                   proxiedComponentDeclaration,
-                  ...statement.declarationList.declarations.slice(j + 1),
+                  ...stmt.declarationList.declarations.slice(declarationIndex + 1),
                 ])
               );
 
               tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
-                ...tsSourceFile.statements.slice(0, i),
+                ...tsSourceFile.statements.slice(0, stmtIndex),
                 proxiedComponentVariableStatement,
-                ...tsSourceFile.statements.slice(i + 1),
+                ...tsSourceFile.statements.slice(stmtIndex + 1),
               ]);
               tsSourceFile = addImports(
                 transformOpts,
