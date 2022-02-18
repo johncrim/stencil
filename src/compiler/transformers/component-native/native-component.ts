@@ -20,7 +20,7 @@ export const updateNativeComponentClass = (
 ) => {
   const heritageClauses = updateNativeHostComponentHeritageClauses(classNode, moduleFile);
   const members = updateNativeHostComponentMembers(transformOpts, classNode, moduleFile, cmp);
-  return updateComponentClass(transformOpts, classNode, heritageClauses, members, outputTarget);
+  return updateComponentClass(transformOpts, classNode, heritageClauses, members, outputTarget, cmp);
 };
 
 const updateNativeHostComponentHeritageClauses = (classNode: ts.ClassDeclaration, moduleFile: d.Module) => {

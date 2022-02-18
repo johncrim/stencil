@@ -9,6 +9,7 @@ export const updateComponentClass = (
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
   members: ts.ClassElement[],
   outputTarget?: d.OutputTarget,
+  cmp?: d.ComponentCompilerMeta,
 ) => {
   let classModifiers = Array.isArray(classNode.modifiers) ? classNode.modifiers.slice() : [];
 
@@ -33,7 +34,7 @@ export const updateComponentClass = (
   }
 
   // ESM with export
-  return createConstClass(transformOpts, classNode, heritageClauses, members, outputTarget);
+  return createConstClass(transformOpts, classNode, heritageClauses, members, outputTarget, cmp);
 };
 
 // TODO: May need to consider how CJS is generated?
@@ -44,6 +45,7 @@ const createConstClass = (
   heritageClauses: ts.HeritageClause[] | ts.NodeArray<ts.HeritageClause>,
   members: ts.ClassElement[],
   outputTarget?: d.OutputTarget,
+  principalComponent?: d.ComponentCompilerMeta,
 ) => {
   const className = classNode.name;
 
@@ -58,24 +60,40 @@ const createConstClass = (
     constModifiers.push(ts.createModifier(ts.SyntaxKind.ExportKeyword));
   }
 
-  if (outputTarget?.type === DIST_CUSTOM_ELEMENTS) {
+  if (outputTarget?.type === DIST_CUSTOM_ELEMENTS && principalComponent !== undefined) {
     // this is the class declaration
-    const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent);
+    const classExpression = ts.createClassExpression(classModifiers, undefined, classNode.typeParameters, heritageClauses, members);
+    const proxyCreationCall = xyzRenameCreateComponentMetadataProxy(principalComponent, classExpression);
+
     ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
-    const metaExpression = ts.factory.createExpressionStatement(
-      ts.factory.createBinaryExpression(
-        ts.factory.createIdentifier(principalComponent.componentClassName),
-        ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-        proxyCreationCall
+    // const metaExpression = ts.factory.createExpressionStatement(
+    //   ts.factory.createBinaryExpression(
+    //     className,
+    //     ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+    //     proxyCreationCall
+    //   )
+    // );
+    const foo = ts.factory.createVariableStatement(
+      constModifiers,
+      ts.factory.createVariableDeclarationList(
+        [
+          ts.createVariableDeclaration(
+            className,
+            undefined,
+            proxyCreationCall
+          ),
+        ],
+        ts.NodeFlags.Let
       )
     );
-    newStatements.push(metaExpression);
+
+    return foo;
   }
   // this is the class declaration
-  return ts.createVariableStatement(
+  return ts.factory.createVariableStatement(
     constModifiers,
-    ts.createVariableDeclarationList(
+    ts.factory.createVariableDeclarationList(
       [
         ts.createVariableDeclaration(
           className,
