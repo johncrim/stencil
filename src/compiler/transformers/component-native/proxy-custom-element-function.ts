@@ -44,14 +44,14 @@ export const proxyCustomElement = (
         return { statementIdx, myStatement };
       };
 
-      tsSourceFile = addImports(
-        transformOpts,
-        tsSourceFile,
-        [RUNTIME_APIS.proxyCustomElement],
-        transformOpts.coreImportPath
-      );
-
       if (moduleFile.cmps.length) {
+        tsSourceFile = addImports(
+          transformOpts,
+          tsSourceFile,
+          [RUNTIME_APIS.proxyCustomElement],
+          transformOpts.coreImportPath
+        );
+        console.log(`WHAT AM I DOING HERE`)
         const principalComponent = moduleFile.cmps[0];
         let { statementIdx, myStatement } = extracted(principalComponent);
 
