@@ -56,10 +56,12 @@ export const proxyCustomElement = (
         }
 
         let { statementIdx, varDec } = result;
+
+        // get the initializer from the Stencil component's class declaration
         const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, varDec.initializer);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
-        const proxiedComponentDeclaration = ts.factory.createVariableDeclaration(principalComponent.componentClassName, undefined, undefined, proxyCreationCall);
+        const proxiedComponentDeclaration = ts.factory.updateVariableDeclaration(varDec, varDec.name,  undefined,undefined, proxyCreationCall);
 
         ////
         const proxiedComponentVariableStatement = ts.factory.createVariableStatement(
