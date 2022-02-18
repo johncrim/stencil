@@ -17,23 +17,9 @@ export const proxyCustomElement = (
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
       const newStatements: ts.Statement[] = [];
 
-      // i think we need to decouple this - the problem is that we add this CR-API, but that doesn't get added as an
-      // mport for a long time.
-      // idk if its removed if we reorder this, but at the end of the day, we need proxyCustomElement to be added before
-      // we add the call to pCE with an anonymous class.
-      // the problem, is that the anonymous class exists properly after this transformer is called. so what we really
-      // need is
-      // 1. add the API
-      // 2. Generate the anonymous class
-      // 3. Use that anon class in the pCE call
-      // 4. call add imports
-      // 5. build out the recursive calls
-
-      let statmentIdx = -1;
+      let statementIdx = -1;
       if (moduleFile.cmps.length) {
         const principalComponent = moduleFile.cmps[0];
-
-        ////
 
         let myStatement = undefined;
         for (let i = 0; i < tsSourceFile.statements.length; i++) {
@@ -44,7 +30,7 @@ export const proxyCustomElement = (
                 if (declaration.name.getText() === principalComponent.componentClassName) {
                   // ok we think we've found it
                   myStatement = declaration.initializer;
-                  statmentIdx = i;
+                  statementIdx = i;
                   break;
                 }
               }
@@ -63,7 +49,6 @@ export const proxyCustomElement = (
 
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
-        // TODO: This needs to get sliced in correctly. Ugh
         const _ryanUseThisBelow = ts.factory.createVariableStatement(
           [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           ts.factory.createVariableDeclarationList(
@@ -77,8 +62,8 @@ export const proxyCustomElement = (
             ts.NodeFlags.Let
           )
         );
-        // newStatements.push(_ryanUseThisBelow)
-        let contents = [...tsSourceFile.statements.slice(0, statmentIdx), _ryanUseThisBelow, ...tsSourceFile.statements.slice(statmentIdx+1)];
+
+        let contents = [...tsSourceFile.statements.slice(0, statementIdx), _ryanUseThisBelow, ...tsSourceFile.statements.slice(statementIdx+1)];
         tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [...contents, ...newStatements]);
       }
 
