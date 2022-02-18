@@ -19,13 +19,9 @@ export const proxyCustomElement = (
   return () => {
     return (tsSourceFile: ts.SourceFile): ts.SourceFile => {
       const moduleFile = getModuleFromSourceFile(compilerCtx, tsSourceFile);
-
       const extracted = (
         principalComponent: d.ComponentCompilerMeta
-      ): { myStatement: ts.Expression | null; statementIdx: number | null } => {
-        let statementIdx = null;
-        let myStatement = null;
-
+      ): { varDec: ts.VariableDeclaration; statementIdx: number } | null => {
         for (let i = 0; i < tsSourceFile.statements.length; i++) {
           const statement = tsSourceFile.statements[i];
           if (ts.isVariableStatement(statement)) {
@@ -35,13 +31,13 @@ export const proxyCustomElement = (
             );
             if (classDeclaration) {
               return {
-                myStatement: classDeclaration.initializer,
+                varDec: classDeclaration,
                 statementIdx: i,
               };
             }
           }
         }
-        return { statementIdx, myStatement };
+        return null;
       };
 
       if (moduleFile.cmps.length) {
@@ -54,15 +50,18 @@ export const proxyCustomElement = (
         );
 
         const principalComponent = moduleFile.cmps[0];
-        let { statementIdx, myStatement } = extracted(principalComponent);
-
-        if (myStatement === null || statementIdx === null) {
+        const result = extracted(principalComponent);
+        if (result === null) {
           return tsSourceFile;
         }
-        const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, myStatement);
+
+        let { statementIdx, varDec } = result;
+        const proxyCreationCall = createAnonymousClassMetadataProxy(principalComponent, varDec.initializer);
         ts.addSyntheticLeadingComment(proxyCreationCall, ts.SyntaxKind.MultiLineCommentTrivia, '@__PURE__', false);
 
         const proxiedComponentDeclaration = ts.factory.createVariableDeclaration(principalComponent.componentClassName, undefined, undefined, proxyCreationCall);
+
+        ////
         const proxiedComponentVariableStatement = ts.factory.createVariableStatement(
           [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
           ts.factory.createVariableDeclarationList(
@@ -70,6 +69,8 @@ export const proxyCustomElement = (
             ts.NodeFlags.Const
           )
         );
+        ///
+
 
         tsSourceFile = ts.factory.updateSourceFile(tsSourceFile, [
           ...tsSourceFile.statements.slice(0, statementIdx),
